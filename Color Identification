@@ -1,0 +1,98 @@
+#include <opencv2/opencv.hpp>
+#include <iostream>
+#include <unordered_set>
+
+using namespace cv;
+using namespace std;
+
+// Function to detect and display colors in an image
+void detectColors(Mat image) {
+    // Convert the image from BGR to HSV color space
+    Mat hsv;
+    cvtColor(image, hsv, COLOR_BGR2HSV);
+
+    // Define ranges for different colors in HSV color space
+    Scalar lower_red1 = Scalar(0, 70, 50);  // Lower bound for red
+    Scalar upper_red1 = Scalar(10, 255, 255);  // Upper bound for red
+    Scalar lower_red2 = Scalar(170, 70, 50);  // Lower bound for red (wrap-around)
+    Scalar upper_red2 = Scalar(180, 255, 255);  // Upper bound for red (wrap-around)
+    Scalar lower_green = Scalar(35, 70, 50);  // Lower bound for green
+    Scalar upper_green = Scalar(90, 255, 255);  // Upper bound for green
+    Scalar lower_blue = Scalar(100, 70, 50);  // Lower bound for blue
+    Scalar upper_blue = Scalar(130, 255, 255);  // Upper bound for blue
+
+    // Threshold the HSV image to get binary masks for each color
+    Mat mask_red1, mask_red2, mask_green, mask_blue;
+    inRange(hsv, lower_red1, upper_red1, mask_red1);
+    inRange(hsv, lower_red2, upper_red2, mask_red2);
+    inRange(hsv, lower_green, upper_green, mask_green);
+    inRange(hsv, lower_blue, upper_blue, mask_blue);
+
+    // Combine the masks to get the final mask
+    Mat mask_red = mask_red1 | mask_red2;
+
+    // Find contours in the masks
+    vector<vector<Point>> contours_red, contours_green, contours_blue;
+    findContours(mask_red, contours_red, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    findContours(mask_green, contours_green, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+    findContours(mask_blue, contours_blue, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+
+    // Display detected colors
+    unordered_set<string> colors;  // Use a set to avoid duplicate colors
+    for (const auto& contour : contours_red) {
+        colors.insert("Red");
+    }
+    for (const auto& contour : contours_green) {
+        colors.insert("Green");
+    }
+    for (const auto& contour : contours_blue) {
+        colors.insert("Blue");
+    }
+
+    // Print the detected colors
+    cout << "Detected Colors:" << endl;
+    for (const auto& color : colors) {
+        cout << "- " << color << endl;
+    }
+}
+
+int main(int argc, char** argv) {
+    // Check if an image file or video file is provided as an argument
+    if (argc != 2) {
+        cerr << "Usage: " << argv[0] << " <image/video file>" << endl;
+        return 1;
+    }
+
+    // Read the input image or video
+    Mat input;
+    VideoCapture cap;
+    if (isdigit(argv[1][0])) {
+        cap.open(atoi(argv[1]));
+        if (!cap.isOpened()) {
+            cerr << "Error: Unable to open video file." << endl;
+            return 1;
+        }
+    } else {
+        input = imread(argv[1]);
+        if (input.empty()) {
+            cerr << "Error: Unable to read image file." << endl;
+            return 1;
+        }
+    }
+
+    // Process image or video frame by frame
+    for (;;) {
+        if (cap.isOpened()) {
+            cap >> input;
+            if (input.empty()) break;
+        }
+
+        detectColors(input);
+
+        // Display the original image and the color detection result
+        imshow("Input", input);
+        if (waitKey(30) == 27) break;  // Press ESC to exit
+    }
+
+    return 0;
+}
