@@ -1,0 +1,56 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm>
+
+using namespace std;
+
+// Function to convert user input to lowercase
+string toLowercase(string str) {
+    transform(str.begin(), str.end(), str.begin(), ::tolower);
+    return str;
+}
+
+// Function to get a random response from a vector of responses
+string getRandomResponse(const vector<string>& responses) {
+    int index = rand() % responses.size();
+    return responses[index];
+}
+
+int main() {
+    // Responses for different types of user input
+    vector<string> greetings = {"Hello! How can I help you today?", "Hey there! What can I assist you with?", "Hi! What do you need assistance with?"};
+    vector<string> farewells = {"Goodbye! Have a great day!", "See you later! Take care!", "Until next time! Farewell!"};
+    vector<string> thanks = {"You're welcome!", "Glad I could help!", "No problem at all!"};
+    vector<string> politeIgnore = {"I'm sorry, I didn't quite catch that.", "Could you please repeat that?", "Apologies, I didn't understand."};
+    vector<string> affirmations = {"Great!", "Awesome!", "Perfect!"};
+
+    cout << "Welcome! How can I assist you today?" << endl;
+
+    while (true) {
+        string userInput;
+        cout << "You: ";
+        getline(cin, userInput);
+
+        // Convert user input to lowercase for easier comparison
+        userInput = toLowercase(userInput);
+
+        // Check for various user inputs and respond accordingly
+        if (userInput.find("hello") != string::npos || userInput.find("hi") != string::npos)
+            cout << "Bot: " << getRandomResponse(greetings) << endl;
+        else if (userInput.find("bye") != string::npos || userInput.find("goodbye") != string::npos)
+            cout << "Bot: " << getRandomResponse(farewells) << endl;
+        else if (userInput.find("thank") != string::npos)
+            cout << "Bot: " << getRandomResponse(thanks) << endl;
+        else if (userInput.find("yes") != string::npos || userInput.find("yeah") != string::npos)
+            cout << "Bot: " << getRandomResponse(affirmations) << endl;
+        else if (userInput.find("no") != string::npos || userInput.find("nope") != string::npos)
+            cout << "Bot: Alright, let me know if you change your mind." << endl;
+        else if (userInput.empty())
+            cout << "Bot: " << getRandomResponse(politeIgnore) << endl;
+        else
+            cout << "Bot: I'm sorry, I'm not sure how to respond to that." << endl;
+    }
+
+    return 0;
+}
