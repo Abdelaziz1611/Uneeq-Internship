@@ -1,0 +1,80 @@
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <sstream>
+#include <cmath>
+
+using namespace std;
+
+// Simple linear regression model
+class LinearRegression {
+private:
+    double slope;
+    double intercept;
+
+public:
+    LinearRegression() : slope(0), intercept(0) {}
+
+    // Fit the model to the given data points
+    void fit(const vector<double>& X, const vector<double>& y) {
+        double sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+        int n = X.size();
+
+        for (int i = 0; i < n; ++i) {
+            sumX += X[i];
+            sumY += y[i];
+            sumXY += X[i] * y[i];
+            sumX2 += X[i] * X[i];
+        }
+
+        slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        intercept = (sumY - slope * sumX) / n;
+    }
+
+    // Predict the output for a given input
+    double predict(double x) const {
+        return slope * x + intercept;
+    }
+};
+
+// Read stock data from a CSV file
+void readStockData(const string& filename, vector<double>& dates, vector<double>& prices) {
+    ifstream file(filename);
+    if (!file.is_open()) {
+        cerr << "Error opening file: " << filename << endl;
+        exit(1);
+    }
+
+    string line;
+    getline(file, line); // Skip header
+
+    while (getline(file, line)) {
+        stringstream ss(line);
+        string date_str, price_str;
+        getline(ss, date_str, ',');
+        getline(ss, price_str, ',');
+
+        dates.push_back(stod(date_str));
+        prices.push_back(stod(price_str));
+    }
+
+    file.close();
+}
+
+int main() {
+    // Read historical stock data
+    vector<double> dates, prices;
+    readStockData("stock_data.csv", dates, prices);
+
+    // Train a linear regression model
+    LinearRegression model;
+    model.fit(dates, prices);
+
+    // Make predictions
+    double future_date = 20240301; // Date for which we want to predict the stock price
+    double predicted_price = model.predict(future_date);
+
+    cout << "Predicted price for " << future_date << ": " << predicted_price << endl;
+
+    return 0;
+}
